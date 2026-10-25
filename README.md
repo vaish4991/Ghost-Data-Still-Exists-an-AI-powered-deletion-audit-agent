@@ -31,11 +31,46 @@ Your solution must:
 - Generate one prediction row for every request in `dataset/deletion_requests.csv`
 - Write the final predictions to `output.csv` in the repository root
 
-Run the starter Python entry point with:
+Run the Python entry point to audit all 518 cases, validate the output, and write `output.csv`:
 
 ```bash
 python3 code/main.py
 ```
+
+To run against the 32 sample cases:
+
+```bash
+python3 code/main.py --requests-file sample_deletion_requests.csv --output scratch/sample_output.csv
+```
+
+To validate an existing `output.csv` with the strict validator:
+
+```bash
+python3 code/main.py --validate-only
+```
+
+To run the complete test suite:
+
+```bash
+pytest tests/ -v
+```
+
+To regenerate the evaluation and usage reports:
+
+```bash
+python3 code/evaluation/main.py
+```
+
+### Architecture Overview
+
+Our solution implements a high-throughput, deterministic AI deletion-audit pipeline:
+1. **Ingestion Engine (`code/pipeline/ingestion.py`)**: Robust RFC 4180 CSV parsing, strict UTC ISO-8601 normalization.
+2. **Historical Identity Resolution (`code/pipeline/identity_resolution.py`)**: Traverses `user_identities.csv` and `user_audit_log.csv` to map historical emails, phone numbers, and SHA256 hashes to canonical customer profiles.
+3. **Multi-Modal Evidence Store (`code/pipeline/evidence_retrieval.py`)**: Ingests 94 evidence files across JSON snapshots, SQLite databases, service export bundles, application logs, text handover notes, and PDF attachments. Strictly enforces the `audit_at` cutoff timestamp.
+4. **Activity Analyzer (`code/pipeline/activity_analysis.py`)**: Identifies genuine non-deletion requests (`NOT_APPLICABLE`), maps explicit `LINK_RESOURCE_IDENTITY` records, and analyzes deletion worker operations.
+5. **Dynamic Policy Engine (`code/pipeline/policy_engine.py`)**: Implements all 15 rules from `deletion_rules.csv` mapping observed states to required policy actions (DELETE, ANONYMIZE, REDACT, RETAIN, DISABLE).
+6. **Status Classifier (`code/pipeline/status_classifier.py`)**: Synthesizes identity graph, evidence snapshots, and policy requirements to determine `COMPLETE`, `INCOMPLETE`, or `NOT_APPLICABLE`.
+7. **Canonical Step Generator & Validator (`code/pipeline/output_generator.py`, `code/pipeline/validator.py`)**: Sorts steps strictly according to Phase (FINDING -> REMEDIATION -> VERIFICATION) -> Operation precedence -> System ID -> Resource ID, with consecutive 1-indexed numbering. Independent validator verifies 100% contract compliance.
 
 The blank template at `dataset/output.csv` is provided as a reference. Your final generated file for submission must be the root-level `output.csv`.
 

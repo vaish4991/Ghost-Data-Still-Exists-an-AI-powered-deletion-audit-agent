@@ -1,0 +1,95 @@
+"""Configuration and constant definitions for Ghost Data Still Exists audit agent."""
+
+import os
+from pathlib import Path
+
+# Paths
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATASET_DIR = REPO_ROOT / "dataset"
+DEFAULT_OUTPUT_CSV = REPO_ROOT / "output.csv"
+
+# Allowed Status Labels
+STATUS_COMPLETE = "COMPLETE"
+STATUS_INCOMPLETE = "INCOMPLETE"
+STATUS_NOT_APPLICABLE = "NOT_APPLICABLE"
+VALID_STATUSES = {STATUS_COMPLETE, STATUS_INCOMPLETE, STATUS_NOT_APPLICABLE}
+
+# Phase ordering
+PHASE_FINDING = "FINDING"
+PHASE_REMEDIATION = "REMEDIATION"
+PHASE_VERIFICATION = "VERIFICATION"
+PHASE_ORDER = [PHASE_FINDING, PHASE_REMEDIATION, PHASE_VERIFICATION]
+
+# Operation ordering within each phase (defined in problem statement)
+OP_ORDER = {
+    PHASE_FINDING: [
+        "REPORT_REMAINING_RECORD",
+        "REPORT_EXPOSED_PII",
+        "REPORT_ACTIVE_DATA_FLOW",
+        "REPORT_RESTORE_RISK",
+    ],
+    PHASE_REMEDIATION: [
+        "DISABLE_DATA_FLOW",
+        "BLOCK_RESTORE",
+        "DELETE_RECORD",
+        "REDACT_RECORD",
+        "ANONYMIZE_RECORD",
+    ],
+    PHASE_VERIFICATION: [
+        "VERIFY_RECORD_ABSENT",
+        "VERIFY_RECORD_PRESENT",
+        "VERIFY_RECORD_REDACTED",
+        "VERIFY_RECORD_ANONYMIZED",
+        "VERIFY_DATA_FLOW_DISABLED",
+        "VERIFY_RESTORE_BLOCKED",
+    ],
+}
+
+# Allowed states for operations
+ALLOWED_STATES = {
+    "REPORT_REMAINING_RECORD": "PRESENT",
+    "REPORT_EXPOSED_PII": "PRESENT",
+    "REPORT_ACTIVE_DATA_FLOW": "ACTIVE",
+    "REPORT_RESTORE_RISK": "ACTIVE",
+    "DISABLE_DATA_FLOW": "DISABLED",
+    "BLOCK_RESTORE": "BLOCKED",
+    "DELETE_RECORD": "ABSENT",
+    "REDACT_RECORD": "REDACTED",
+    "ANONYMIZE_RECORD": "ANONYMIZED",
+    "VERIFY_RECORD_ABSENT": "ABSENT",
+    "VERIFY_RECORD_PRESENT": "PRESENT",
+    "VERIFY_RECORD_REDACTED": "REDACTED",
+    "VERIFY_RECORD_ANONYMIZED": "ANONYMIZED",
+    "VERIFY_DATA_FLOW_DISABLED": "DISABLED",
+    "VERIFY_RESTORE_BLOCKED": "BLOCKED",
+}
+
+# Required step fields
+REQUIRED_STEP_FIELDS = [
+    "step_no",
+    "phase",
+    "system_id",
+    "resource_id",
+    "operation",
+    "state",
+    "evidence_id",
+]
+
+# Policy Rules from deletion_rules.csv
+POLICY_RULES = {
+    "USER_PROFILE": "DELETE",
+    "SECONDARY_IDENTIFIER": "DELETE",
+    "SEARCH_INDEX_ENTRY": "DELETE",
+    "CACHE_ENTRY": "DELETE",
+    "SUPPORT_MESSAGE": "REDACT",
+    "SUPPORT_ATTACHMENT": "DELETE",
+    "ANALYTICS_PROFILE": "ANONYMIZE",
+    "PRODUCT_TELEMETRY": "ANONYMIZE",
+    "USER_EXPORT": "DELETE",
+    "MARKETING_PROFILE": "DELETE",
+    "EMAIL_DELIVERY_LOG": "REDACT",
+    "SECURITY_AUDIT_LOG": "RETAIN",
+    "LEGAL_HOLD_RECORD": "RETAIN",
+    "BACKUP_ARCHIVE": "RETAIN",
+    "ACCOUNT_TOMBSTONE": "REDACT",
+}
